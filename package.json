@@ -12,10 +12,12 @@
 		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "1.13.1",
-		"agents": "^0.0.100",
+		"@e2b/code-interpreter": "^0.0.7",
+		"@modelcontextprotocol/sdk": "^1.13.1",
+		"e2b": "^1.12.0",
 		"zod": "^3.25.67",
-		"@e2b/code-interpreter": "^0.0.7"
+		"agents": "latest"
+		
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.6",
