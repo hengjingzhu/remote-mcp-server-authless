@@ -1,6 +1,7 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { Sandbox } from '@e2b/code-interpreter';
 
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
@@ -10,6 +11,9 @@ export class MyMCP extends McpAgent {
 	});
 
 	async init() {
+
+		
+
 		// Simple addition tool
 		this.server.tool(
 			"add",
