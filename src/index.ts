@@ -44,14 +44,32 @@ export class MyMCP extends McpAgent<Env> {
 
   private currentBearerToken?: string;
 
-  // Override fetch to extract and store Bearer token for each request
-  async fetch(request: Request): Promise<Response> {
+  // Override onSSEMcpMessage to extract Bearer token from each SSE request
+  async onSSEMcpMessage(sessionId: string, request: Request): Promise<Error | null> {
     // Extract Bearer token from current request
     const authHeader = request.headers.get("Authorization");
     if (authHeader) {
       const match = authHeader.match(/^Bearer\s+(.+)$/i);
       this.currentBearerToken = match ? match[1] : undefined;
-      console.log("Durable Object - Bearer token extracted:", this.currentBearerToken ? "[present]" : "[missing]");
+      console.log("SSE Message - Bearer token extracted:", this.currentBearerToken ? "[present]" : "[missing]");
+    }
+    
+    // Call parent method
+    return super.onSSEMcpMessage(sessionId, request);
+  }
+
+  // Store the Authorization header from the initial request for direct MCP
+  private initialAuthHeader?: string;
+
+  // Override fetch to capture Authorization header before WebSocket upgrade
+  async fetch(request: Request): Promise<Response> {
+    // Store the Authorization header for later use in tools
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader) {
+      this.initialAuthHeader = authHeader;
+      const match = authHeader.match(/^Bearer\s+(.+)$/i);
+      this.currentBearerToken = match ? match[1] : undefined;
+      console.log("Durable Object fetch - Bearer token extracted:", this.currentBearerToken ? "[present]" : "[missing]");
     }
     
     // Call parent fetch method
@@ -126,6 +144,8 @@ export class MyMCP extends McpAgent<Env> {
 			async ({ prompt, aspect_ratio, size, style }) => {
 				// Access the API key from the current Bearer token
 				console.log("Tool execution - this.currentBearerToken:", this.currentBearerToken ? "[present]" : "[missing]");
+				console.log("Tool execution - this.initialAuthHeader:", this.initialAuthHeader ? "[present]" : "[missing]");
+				console.log("Tool execution - Bearer token value:", this.currentBearerToken ? this.currentBearerToken.substring(0, 10) + "..." : "undefined");
 				
 				const apiKey = this.currentBearerToken;
 				
@@ -186,12 +206,16 @@ export default {
 
 		// Extract Bearer token from Authorization header
 		const token = extractBearerToken(request);
+		console.log("Worker fetch - URL:", url.pathname);
+		console.log("Worker fetch - Bearer token:", token ? "[present]" : "[missing]");
 		
 		// For MCP endpoints, validate authorization
 		if (url.pathname === "/sse" || url.pathname === "/sse/message" || url.pathname === "/mcp") {
 			if (!token) {
 				return createUnauthorizedResponse();
 			}
+			
+			console.log("Worker fetch - About to call Durable Object for:", url.pathname);
 			
 			// Pass original env, Bearer token will be extracted in Durable Object
 			if (url.pathname === "/sse" || url.pathname === "/sse/message") {
