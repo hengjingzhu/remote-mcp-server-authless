@@ -12,7 +12,7 @@ interface Env {
 
 // Extract Bearer token from Authorization header
 function extractBearerToken(request: Request): string | null {
-  const authHeader = request.headers.get("Authorization");
+  const authHeader = request.headers.get("authorization");
   if (!authHeader) {
     return null;
   }
