@@ -5,7 +5,6 @@ import Replicate from "replicate";
 
 interface Env {
   E2B_API_KEY: string;
-  REPLICATE_API_TOKEN?: string;
   OAUTH_CLIENT_ID?: string;
   OAUTH_CLIENT_SECRET?: string;
 }
@@ -43,13 +42,20 @@ export class MyMCP extends McpAgent<Env> {
     description: "Remote MCP server with Recraft V3 SVG generation"
   });
 
-  private replicateApiToken?: string;
+  private currentBearerToken?: string;
 
-  constructor(state: DurableObjectState, env: Env) {
-    super(state, env);
-    // Store the Replicate API token from environment
-    this.replicateApiToken = env.REPLICATE_API_TOKEN;
-    console.log("Constructor - env.REPLICATE_API_TOKEN:", env.REPLICATE_API_TOKEN);
+  // Override fetch to extract and store Bearer token for each request
+  async fetch(request: Request): Promise<Response> {
+    // Extract Bearer token from current request
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader) {
+      const match = authHeader.match(/^Bearer\s+(.+)$/i);
+      this.currentBearerToken = match ? match[1] : undefined;
+      console.log("Durable Object - Bearer token extracted:", this.currentBearerToken ? "[present]" : "[missing]");
+    }
+    
+    // Call parent fetch method
+    return super.fetch(request);
   }
   
 	async init() {
@@ -118,10 +124,10 @@ export class MyMCP extends McpAgent<Env> {
 				]).optional(),
 			},
 			async ({ prompt, aspect_ratio, size, style }) => {
-				// Access the API key from the stored token
-				console.log("Tool execution - this.replicateApiToken:", this.replicateApiToken);
+				// Access the API key from the current Bearer token
+				console.log("Tool execution - this.currentBearerToken:", this.currentBearerToken ? "[present]" : "[missing]");
 				
-				const apiKey = this.replicateApiToken;
+				const apiKey = this.currentBearerToken;
 				
 				if (!apiKey) {
 					return {
@@ -187,18 +193,13 @@ export default {
 				return createUnauthorizedResponse();
 			}
 			
-			// Create enhanced environment with API key from token
-			const enhancedEnv: Env = {
-				...env,
-				REPLICATE_API_TOKEN: token, // Use the authorization token as the API key
-			};
-			
+			// Pass original env, Bearer token will be extracted in Durable Object
 			if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-				return MyMCP.serveSSE("/sse").fetch(request, enhancedEnv, ctx);
+				return MyMCP.serveSSE("/sse").fetch(request, env, ctx);
 			}
 
 			if (url.pathname === "/mcp") {
-				return MyMCP.serve("/mcp").fetch(request, enhancedEnv, ctx);
+				return MyMCP.serve("/mcp").fetch(request, env, ctx);
 			}
 		}
 
