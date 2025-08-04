@@ -1,4 +1,5 @@
 import { McpAgent } from "agents/mcp";
+import { getCurrentAgent } from "agents";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import Replicate from "replicate";
@@ -18,6 +19,7 @@ function extractBearerToken(request: Request): string | null {
   }
   
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  console.log("match",match)
   return match ? match[1] : null;
 }
 
@@ -108,8 +110,17 @@ export class MyMCP extends McpAgent<Env> {
 				]).optional(),
 			},
 			async ({ prompt, aspect_ratio, size, style }) => {
-				// Access the API key from the current environment
-				const apiKey = this.env.REPLICATE_API_TOKEN;
+				// Access the Bearer token from the current request context
+				const { request } = getCurrentAgent();
+				let apiKey: string | null = null;
+				
+				if (request) {
+					const authHeader = request.headers.get("Authorization");
+					if (authHeader) {
+						const match = authHeader.match(/^Bearer\s+(.+)$/i);
+						apiKey = match ? match[1] : null;
+					}
+				}
 				
 				if (!apiKey) {
 					return {
