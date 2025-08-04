@@ -5,9 +5,34 @@ import { registerAllTools } from "./tools/index.js";
 
 interface Env {
   E2B_API_KEY: string;
-  REPLICATE_API_TOKEN: string;
+  REPLICATE_API_TOKEN?: string;
   OAUTH_CLIENT_ID?: string;
   OAUTH_CLIENT_SECRET?: string;
+}
+
+// Extract Bearer token from Authorization header
+function extractBearerToken(request: Request): string | null {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader) {
+    return null;
+  }
+  
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : null;
+}
+
+// Create unauthorized response
+function createUnauthorizedResponse(): Response {
+  return new Response(
+    JSON.stringify({ error: "Unauthorized", message: "Valid Bearer token required" }),
+    {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+        "WWW-Authenticate": "Bearer",
+      },
+    }
+  );
 }
 
 export class MyMCP extends McpAgent<Env> {
@@ -16,8 +41,7 @@ export class MyMCP extends McpAgent<Env> {
     version: "1.0.0",
     description: "Remote MCP server with Recraft V3 SVG generation"
   });
-
-
+  
 	async init() {
 		// Register external tools (Recraft SVG)
 		registerAllTools(this.server, this.env);
@@ -74,12 +98,28 @@ export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
 
-		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-			return MyMCP.serveSSE("/sse").fetch(request, env, ctx);
-		}
+		// Extract Bearer token from Authorization header
+		const token = extractBearerToken(request);
+		
+		// For MCP endpoints, validate authorization
+		if (url.pathname === "/sse" || url.pathname === "/sse/message" || url.pathname === "/mcp") {
+			if (!token) {
+				return createUnauthorizedResponse();
+			}
+			
+			// Create enhanced environment with API key from token
+			const enhancedEnv: Env = {
+				...env,
+				REPLICATE_API_TOKEN: token, // Use the authorization token as the API key
+			};
+			
+			if (url.pathname === "/sse" || url.pathname === "/sse/message") {
+				return MyMCP.serveSSE("/sse").fetch(request, enhancedEnv, ctx);
+			}
 
-		if (url.pathname === "/mcp") {
-			return MyMCP.serve("/mcp").fetch(request, env, ctx);
+			if (url.pathname === "/mcp") {
+				return MyMCP.serve("/mcp").fetch(request, enhancedEnv, ctx);
+			}
 		}
 
 		return new Response("Not found", { status: 404 });
