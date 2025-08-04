@@ -47,6 +47,54 @@ this.server.tool(
 - `zod` - Runtime schema validation for tool parameters
 - `@e2b/code-interpreter` - E2B sandbox integration for code execution
 
+## 重要注意事项 (Important Notes)
+
+### Bearer Token Handling in MCP Architecture
+
+Due to the MCP SDK's architectural design, Authorization headers from initial HTTP requests are not automatically passed through to tool execution contexts. This creates a challenge for tools that require API keys or authentication tokens.
+
+**Problem**: The MCP SDK separates the initial HTTP request (containing Authorization headers) from the WebSocket connections used for tool execution. Tools like `generate_svg` that need API keys cannot access the Bearer token directly.
+
+**Solution**: Implement a token storage pattern that works within MCP SDK constraints:
+
+1. **Worker-level token extraction**: Extract Bearer token and session ID from incoming requests before delegating to MCP SDK
+2. **Persistent storage**: Store the Bearer token in Durable Object storage using the correct session naming conventions
+3. **Tool-level retrieval**: Retrieve the Bearer token from storage during tool execution
+
+**Implementation Pattern**:
+
+```typescript
+// In worker fetch handler - store token before MCP SDK routing
+const token = extractBearerToken(request);
+const sessionId = getSessionId(request, url);
+await storeBearerTokenInDO(env, sessionId, token, endpointType);
+
+// In MyMCP class - handle storage requests
+async fetch(request: Request): Promise<Response> {
+  if (url.pathname === "/store-bearer-token" && request.method === "POST") {
+    const { token } = await request.json();
+    await this.ctx.storage.put("bearerToken", token);
+    return new Response("Token stored", { status: 200 });
+  }
+  return super.fetch(request);
+}
+
+// In tool implementation - retrieve token from storage
+async ({ param }) => {
+  if (!this.currentBearerToken) {
+    this.currentBearerToken = await this.ctx.storage.get("bearerToken");
+  }
+  const apiKey = this.currentBearerToken;
+  // Use apiKey for external API calls
+}
+```
+
+**Session ID Conventions**: 
+- SSE connections: `sse:${sessionId}`
+- Direct MCP connections: `streamable-http:${sessionId}`
+
+This pattern ensures Bearer tokens are accessible during tool execution while respecting the MCP SDK's WebSocket upgrade process.
+
 ## Deployment Configuration
 
 - **Wrangler config** (`wrangler.jsonc`): Defines Durable Objects binding for MyMCP class
