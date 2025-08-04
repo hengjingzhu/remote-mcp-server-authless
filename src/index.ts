@@ -7,6 +7,7 @@ interface Env {
   E2B_API_KEY: string;
   OAUTH_CLIENT_ID?: string;
   OAUTH_CLIENT_SECRET?: string;
+  MCP_OBJECT: DurableObjectNamespace;
 }
 
 // Extract Bearer token from Authorization header
@@ -44,35 +45,28 @@ export class MyMCP extends McpAgent<Env> {
 
   private currentBearerToken?: string;
 
-  // Override onSSEMcpMessage to extract Bearer token from each SSE request
-  async onSSEMcpMessage(sessionId: string, request: Request): Promise<Error | null> {
-    // Extract Bearer token from current request
-    const authHeader = request.headers.get("Authorization");
-    if (authHeader) {
-      const match = authHeader.match(/^Bearer\s+(.+)$/i);
-      this.currentBearerToken = match ? match[1] : undefined;
-      console.log("SSE Message - Bearer token extracted:", this.currentBearerToken ? "[present]" : "[missing]");
-    }
-    
-    // Call parent method
-    return super.onSSEMcpMessage(sessionId, request);
-  }
-
-  // Store the Authorization header from the initial request for direct MCP
-  private initialAuthHeader?: string;
-
-  // Override fetch to capture Authorization header before WebSocket upgrade
+  // Override fetch to handle internal Bearer token storage requests
   async fetch(request: Request): Promise<Response> {
-    // Store the Authorization header for later use in tools
-    const authHeader = request.headers.get("Authorization");
-    if (authHeader) {
-      this.initialAuthHeader = authHeader;
-      const match = authHeader.match(/^Bearer\s+(.+)$/i);
-      this.currentBearerToken = match ? match[1] : undefined;
-      console.log("Durable Object fetch - Bearer token extracted:", this.currentBearerToken ? "[present]" : "[missing]");
+    const url = new URL(request.url);
+    
+    // Handle internal Bearer token storage request
+    if (url.pathname === "/store-bearer-token" && request.method === "POST") {
+      try {
+        const { token } = await request.json() as { token: string };
+        console.log("Durable Object - Storing Bearer token:", token ? "[present]" : "[missing]");
+        
+        // Store the Bearer token in Durable Object persistent storage
+        await this.ctx.storage.put("bearerToken", token);
+        console.log("Durable Object - Bearer token stored in persistent storage");
+        
+        return new Response("Token stored", { status: 200 });
+      } catch (error) {
+        console.error("Durable Object - Failed to store Bearer token:", error);
+        return new Response("Failed to store token", { status: 500 });
+      }
     }
     
-    // Call parent fetch method
+    // Call parent fetch method for all other requests
     return super.fetch(request);
   }
   
@@ -142,9 +136,20 @@ export class MyMCP extends McpAgent<Env> {
 				]).optional(),
 			},
 			async ({ prompt, aspect_ratio, size, style }) => {
-				// Access the API key from the current Bearer token
-				console.log("Tool execution - this.currentBearerToken:", this.currentBearerToken ? "[present]" : "[missing]");
-				console.log("Tool execution - this.initialAuthHeader:", this.initialAuthHeader ? "[present]" : "[missing]");
+				// Retrieve Bearer token from storage if not already cached
+				if (!this.currentBearerToken) {
+					try {
+						console.log("Tool execution - Retrieving Bearer token from storage");
+						this.currentBearerToken = await this.ctx.storage.get("bearerToken") as string;
+						console.log("Tool execution - Bearer token retrieved from storage:", this.currentBearerToken ? "[present]" : "[missing]");
+					} catch (error) {
+						console.error("Tool execution - Failed to retrieve Bearer token:", error);
+					}
+				} else {
+					console.log("Tool execution - Using cached Bearer token");
+				}
+				
+				console.log("Tool execution - Final Bearer token status:", this.currentBearerToken ? "[present]" : "[missing]");
 				console.log("Tool execution - Bearer token value:", this.currentBearerToken ? this.currentBearerToken.substring(0, 10) + "..." : "undefined");
 				
 				const apiKey = this.currentBearerToken;
@@ -200,8 +205,27 @@ export class MyMCP extends McpAgent<Env> {
 	}
 }
 
+// Helper function to store Bearer token in Durable Object storage
+async function storeBearerTokenInDO(env: Env, sessionId: string, token: string, endpointType: "sse" | "mcp"): Promise<void> {
+	// Get the correct Durable Object instance that the MCP SDK will use
+	// Based on MCP SDK source: SSE uses "sse:${sessionId}", direct MCP uses "streamable-http:${sessionId}"
+	const doPrefix = endpointType === "sse" ? "sse" : "streamable-http";
+	const id = env.MCP_OBJECT.idFromName(`${doPrefix}:${sessionId}`);
+	const doStub = env.MCP_OBJECT.get(id);
+	
+	// Store the Bearer token in Durable Object storage
+	// We'll use a special internal endpoint to store the token
+	await doStub.fetch(new Request("https://internal/store-bearer-token", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ token })
+	}));
+}
+
 export default {
-	fetch(request: Request, env: Env, ctx: ExecutionContext) {
+	async fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
 
 		// Extract Bearer token from Authorization header
@@ -217,7 +241,38 @@ export default {
 			
 			console.log("Worker fetch - About to call Durable Object for:", url.pathname);
 			
-			// Pass original env, Bearer token will be extracted in Durable Object
+			// Extract session ID and store Bearer token before calling MCP SDK
+			let sessionId: string | null = null;
+			
+			if (url.pathname === "/sse") {
+				// For SSE connections, session ID is in URL parameters
+				sessionId = url.searchParams.get("sessionId");
+				if (!sessionId) {
+					// Generate new session ID for new SSE connections
+					sessionId = env.MCP_OBJECT.newUniqueId().toString();
+				}
+			} else if (url.pathname === "/mcp") {
+				// For direct MCP connections, session ID might be in headers
+				sessionId = request.headers.get("mcp-session-id");
+				if (!sessionId) {
+					// Generate new session ID for initialization requests
+					sessionId = env.MCP_OBJECT.newUniqueId().toString();
+				}
+			}
+			
+			if (sessionId) {
+				console.log("Worker fetch - Storing Bearer token for session:", sessionId);
+				try {
+					const endpointType = url.pathname === "/sse" ? "sse" : "mcp";
+					await storeBearerTokenInDO(env, sessionId, token, endpointType);
+					console.log("Worker fetch - Bearer token stored successfully");
+				} catch (error) {
+					console.error("Worker fetch - Failed to store Bearer token:", error);
+					return new Response("Internal server error", { status: 500 });
+				}
+			}
+			
+			// Continue with normal MCP SDK flow
 			if (url.pathname === "/sse" || url.pathname === "/sse/message") {
 				return MyMCP.serveSSE("/sse").fetch(request, env, ctx);
 			}
