@@ -12,7 +12,7 @@ interface Env {
 
 // Extract Bearer token from Authorization header
 function extractBearerToken(request: Request): string | null {
-  const authHeader = request.headers.get("authorization");
+  const authHeader = request.headers.get("Authorization");
   if (!authHeader) {
     return null;
   }
@@ -42,6 +42,15 @@ export class MyMCP extends McpAgent<Env> {
     version: "1.0.0",
     description: "Remote MCP server with Recraft V3 SVG generation"
   });
+
+  private replicateApiToken?: string;
+
+  constructor(state: DurableObjectState, env: Env) {
+    super(state, env);
+    // Store the Replicate API token from environment
+    this.replicateApiToken = env.REPLICATE_API_TOKEN;
+    console.log("Constructor - env.REPLICATE_API_TOKEN:", env.REPLICATE_API_TOKEN);
+  }
   
 	async init() {
 		// Simple addition tool
@@ -109,11 +118,10 @@ export class MyMCP extends McpAgent<Env> {
 				]).optional(),
 			},
 			async ({ prompt, aspect_ratio, size, style }) => {
-				// Access the API key from the enhanced environment
-				console.log("Tool execution - this.env contents:", JSON.stringify(this.env, null, 2));
-				console.log("Tool execution - REPLICATE_API_TOKEN:", this.env.REPLICATE_API_TOKEN);
+				// Access the API key from the stored token
+				console.log("Tool execution - this.replicateApiToken:", this.replicateApiToken);
 				
-				const apiKey = this.env.REPLICATE_API_TOKEN;
+				const apiKey = this.replicateApiToken;
 				
 				if (!apiKey) {
 					return {
