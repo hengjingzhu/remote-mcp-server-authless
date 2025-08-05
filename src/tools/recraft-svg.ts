@@ -59,14 +59,14 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                 }
 
                 const output = await replicate.run("recraft-ai/recraft-v3-svg", { input });
-
+                
                 return {
                     content: [
                         {
                             type: "text",
                             text: JSON.stringify({
                                 status: "success",
-                                svg_url: output,
+                                svg_url: `${output}`,
                                 message: "SVG generated successfully",
                                 metadata: {
                                     prompt: prompt,
