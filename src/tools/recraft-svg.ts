@@ -126,26 +126,18 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             type: "text",
                             text: JSON.stringify({
                                 status: "success",
-                                // url: `${output}`,  // 保留 ${output} 结果 - 这是正确的 Recraft API 返回值
-                                // message: "SVG Image generated successfully",
-                                // metadata: {
-                                //     prompt: prompt,
-                                //     size: size,
-                                //     aspect_ratio: aspect_ratio,
-                                //     style: style || null
-                                // }
+                                url: `${output}`,  // 保留 ${output} 结果 - 这是正确的 Recraft API 返回值
+                                message: "SVG Image generated successfully",
+                                metadata: {
+                                    prompt: prompt,
+                                    size: size,
+                                    aspect_ratio: aspect_ratio,
+                                    style: style || null
+                                }
                             }, null, 2)
                         }
                     ],
-                    // 可选：添加结构化内容便于程序化处理
-                    structuredContent: {
-                        url: `${output}`,
-                        prompt: prompt,
-                        size: size,
-                        aspect_ratio: aspect_ratio,
-                        style: style || null,
-                        message: "SVG Image generated successfully",
-                    }
+                    
                 };
             } catch (error) {
                 return {
