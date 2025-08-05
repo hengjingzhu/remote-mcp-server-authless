@@ -5,9 +5,9 @@ import Replicate from "replicate";
 export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => Promise<string | null>) {
     server.tool(
         "generate_svg",
-        "Generates high-quality SVG vector graphics using Recraft V3 AI model. Use this tool when you need to create scalable vector illustrations, icons, logos, or artistic designs from text descriptions. Requires a valid Replicate API key provided via Bearer token authentication. Returns a URL to the generated SVG file that can be downloaded or embedded. Supports various aspect ratios, sizes, and artistic styles for different use cases.",
+        "Generates high-quality SVG vector graphics. Use this tool when you need to create scalable vector illustrations, icons, logos, or artistic designs from text descriptions. Returns a URL to the generated SVG file that can be downloaded or embedded. Supports various aspect ratios, sizes, and artistic styles for different use cases.",
         {
-            prompt: z.string().min(1, "Prompt is required").describe("Detailed text description of the SVG image to generate. Be specific about style, colors, composition, and visual elements you want to include"),
+            prompt: z.string().min(1, "Prompt is required").describe("Detailed English text description of the SVG image to generate. Be specific about style, colors, composition, and visual elements you want to include"),
             aspect_ratio: z.enum([
                 "Not set", "1:1", "4:3", "3:4", "3:2", "2:3", "16:9", "9:16", 
                 "1:2", "2:1", "7:5", "5:7", "4:5", "5:4", "3:5", "5:3"
@@ -31,7 +31,13 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                     content: [
                         {
                             type: "text",
-                            text: "Error: Replicate API key not available. Please provide a valid Bearer token in the Authorization header."
+                            text: JSON.stringify({
+                                status: "error",
+                                error_code: "MISSING_API_KEY",
+                                message: "Replicate API key not available. Please provide a valid Bearer token in the Authorization header.",
+                                svg_url: null,
+                                metadata: null
+                            }, null, 2)
                         }
                     ],
                 };
@@ -58,7 +64,17 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                     content: [
                         {
                             type: "text",
-                            text: `SVG generated successfully! URL: ${output}`
+                            text: JSON.stringify({
+                                status: "success",
+                                svg_url: output,
+                                message: "SVG generated successfully",
+                                metadata: {
+                                    prompt: prompt,
+                                    size: size,
+                                    aspect_ratio: aspect_ratio,
+                                    style: style || null
+                                }
+                            }, null, 2)
                         }
                     ],
                 };
@@ -67,7 +83,18 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                     content: [
                         {
                             type: "text",
-                            text: `Error generating SVG: ${error instanceof Error ? error.message : String(error)}`
+                            text: JSON.stringify({
+                                status: "error",
+                                error_code: "GENERATION_FAILED",
+                                message: `Error generating SVG: ${error instanceof Error ? error.message : String(error)}`,
+                                svg_url: null,
+                                metadata: {
+                                    prompt: prompt,
+                                    size: size,
+                                    aspect_ratio: aspect_ratio,
+                                    style: style || null
+                                }
+                            }, null, 2)
                         }
                     ],
                 };
