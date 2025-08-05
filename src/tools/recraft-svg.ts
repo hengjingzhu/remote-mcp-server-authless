@@ -61,13 +61,13 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             // 使用 Text Content 类型返回结构化的错误信息
                             // 可选的其他类型：image, audio, resource, resource_link
                             type: "text",
-                            text: JSON.stringify({
+                            text: {
                                 status: "error",
                                 error_code: "MISSING_API_KEY",
                                 message: "Replicate API key not available. Please provide a valid Bearer token in the Authorization header.",
                                 svg_url: null,
                                 metadata: null
-                            }, null, 2)
+                            }
                         }
                     ],
                     // 标记为错误结果，让 LLM 知道这是一个错误状态
