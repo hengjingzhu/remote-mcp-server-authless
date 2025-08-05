@@ -29,10 +29,11 @@ import Replicate from "replicate";
  *   structuredContent?: object      // 可选：结构化内容数据
  * }
  */
+const tool_name = "generate_svg"
 
 export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => Promise<string | null>) {
     server.tool(
-        "generate_svg",
+        tool_name,
         "Generates high-quality SVG vector graphics. Use this tool when you need to create scalable vector illustrations, icons, logos, or artistic designs from text descriptions. Returns a URL to the generated SVG file that can be downloaded or embedded. Supports various aspect ratios, sizes, and artistic styles for different use cases.",
         {
             prompt: z.string().min(1, "Prompt is required").describe("Detailed English text description of the SVG image to generate. Be specific about style, colors, composition, and visual elements you want to include"),
@@ -125,6 +126,7 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             // }
                             type: "text",
                             text: JSON.stringify({
+                                tool_name: tool_name,
                                 status: "success",
                                 filepath: `${output}`,  // 保留 ${output} 结果 - 这是正确的 Recraft API 返回值
                                 message: "SVG Image generated successfully",
