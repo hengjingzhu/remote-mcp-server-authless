@@ -75,7 +75,11 @@ export class MyMCP extends McpAgent<Env> {
 		// Simple addition tool
 		this.server.tool(
 			"add",
-			{ a: z.number(), b: z.number() },
+			"Performs basic mathematical addition of two numbers. Use this tool when you need to calculate the sum of two numeric values. Returns the result as a string representation of the sum.",
+			{ 
+				a: z.number().describe("The first number to add"), 
+				b: z.number().describe("The second number to add") 
+			},
 			async ({ a, b }) => ({
 				content: [{ type: "text", text: String(a + b) }],
 			})
@@ -84,10 +88,11 @@ export class MyMCP extends McpAgent<Env> {
 		// Calculator tool with multiple operations
 		this.server.tool(
 			"calculate",
+			"Advanced calculator tool that performs basic arithmetic operations (addition, subtraction, multiplication, division) on two numbers. Use this tool when you need to perform mathematical calculations beyond simple addition. Handles division by zero errors gracefully. Returns the calculation result or an error message.",
 			{
-				operation: z.enum(["add", "subtract", "multiply", "divide"]),
-				a: z.number(),
-				b: z.number(),
+				operation: z.enum(["add", "subtract", "multiply", "divide"]).describe("The arithmetic operation to perform: 'add' for addition, 'subtract' for subtraction, 'multiply' for multiplication, 'divide' for division"),
+				a: z.number().describe("The first operand (left side of the operation)"),
+				b: z.number().describe("The second operand (right side of the operation)"),
 			},
 			async ({ operation, a, b }) => {
 				let result: number;
