@@ -2,6 +2,34 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import Replicate from "replicate";
 
+/**
+ * MCP Tool Return Content Types 工具返回内容类型
+ * 
+ * MCP 支持 5 种不同的 content 类型：
+ * 
+ * 1. Text Content (文本内容) - 最常用
+ *    { type: "text", text: string }
+ * 
+ * 2. Image Content (图片内容) - 用于返回图片数据
+ *    { type: "image", data: string, mimeType: string }
+ * 
+ * 3. Audio Content (音频内容) - 用于返回音频数据  
+ *    { type: "audio", data: string, mimeType: string }
+ * 
+ * 4. Resource Content (嵌入式资源) - 直接嵌入资源内容
+ *    { type: "resource", resource: { uri: string, mimeType: string, text?: string, blob?: string } }
+ * 
+ * 5. Resource Link Content (资源链接) - 提供资源链接引用
+ *    { type: "resource_link", uri: string, name?: string, description?: string, mimeType?: string }
+ * 
+ * 完整返回结构:
+ * {
+ *   content: Array<ContentObject>,  // content 对象数组
+ *   isError?: boolean,              // 可选：是否为错误结果 (默认 false)
+ *   structuredContent?: object      // 可选：结构化内容数据
+ * }
+ */
+
 export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => Promise<string | null>) {
     server.tool(
         "generate_svg",
@@ -30,6 +58,8 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                 return {
                     content: [
                         {
+                            // 使用 Text Content 类型返回结构化的错误信息
+                            // 可选的其他类型：image, audio, resource, resource_link
                             type: "text",
                             text: JSON.stringify({
                                 status: "error",
@@ -40,6 +70,8 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             }, null, 2)
                         }
                     ],
+                    // 标记为错误结果，让 LLM 知道这是一个错误状态
+                    isError: true
                 };
             }
 
@@ -63,10 +95,38 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                 return {
                     content: [
                         {
+                            // 当前使用 Text Content 类型返回成功结果的结构化数据
+                            // 
+                            // 未来可考虑的其他返回类型：
+                            // 
+                            // 1. Resource Link 类型 - 直接提供 SVG 链接：
+                            // { 
+                            //   type: "resource_link", 
+                            //   uri: output, 
+                            //   name: "Generated SVG", 
+                            //   mimeType: "image/svg+xml" 
+                            // }
+                            // 
+                            // 2. Image Content 类型 - 如果需要返回 base64 编码的图片：
+                            // { 
+                            //   type: "image", 
+                            //   data: "base64-encoded-svg-data", 
+                            //   mimeType: "image/svg+xml" 
+                            // }
+                            // 
+                            // 3. Resource Content 类型 - 嵌入完整的 SVG 文件内容：
+                            // { 
+                            //   type: "resource", 
+                            //   resource: { 
+                            //     uri: "generated://svg", 
+                            //     mimeType: "image/svg+xml", 
+                            //     text: "SVG文件内容" 
+                            //   } 
+                            // }
                             type: "text",
                             text: JSON.stringify({
                                 status: "success",
-                                url: `${output}`,
+                                url: `${output}`,  // 保留 ${output} 结果 - 这是正确的 Recraft API 返回值
                                 message: "SVG generated successfully",
                                 metadata: {
                                     prompt: prompt,
@@ -77,11 +137,21 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             }, null, 2)
                         }
                     ],
+                    // 可选：添加结构化内容便于程序化处理
+                    structuredContent: {
+                        url: `${output}`,
+                        prompt: prompt,
+                        size: size,
+                        aspect_ratio: aspect_ratio,
+                        style: style || null
+                    }
                 };
             } catch (error) {
                 return {
                     content: [
                         {
+                            // 使用 Text Content 类型返回异常错误信息
+                            // 包含详细的错误信息和请求参数，便于调试
                             type: "text",
                             text: JSON.stringify({
                                 status: "error",
@@ -97,6 +167,8 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             }, null, 2)
                         }
                     ],
+                    // 明确标记为错误结果
+                    isError: true
                 };
             }
         }
