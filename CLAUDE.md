@@ -241,6 +241,48 @@ MCP 工具可以返回 5 种不同类型的 content 对象，每种类型支持�
 }
 ```
 
+### Replicate 图像生成工具标准格式 (Replicate Image Generation Tool Standard Format)
+
+对于所有 Replicate 图像生成模型工具，统一使用以下标准化 JSON 数据格式返回结果：
+
+```typescript
+{
+    type: "text",
+    text: JSON.stringify({
+        tool_name: string,        // 工具名称标识符
+        status: "success",        // 执行状态 ("success" | "error")
+        filepath: string,         // API 返回的文件路径或 URL
+        message: string,          // 人类可读的状态消息
+        metadata: {
+            prompt: string,           // 用户输入的提示词
+            size: string,            // 图像尺寸
+            aspect_ratio: string,    // 宽高比
+            style: string | null     // 样式设置 (可选)
+        }
+    }, null, 2)
+}
+```
+
+**标准格式示例:**
+```json
+{
+  "type": "text",
+  "text": "{\n  \"tool_name\": \"recraft_svg\",\n  \"status\": \"success\",\n  \"filepath\": \"https://replicate.delivery/pbxt/abc123.svg\",\n  \"message\": \"SVG Image generated successfully\",\n  \"metadata\": {\n    \"prompt\": \"A modern logo design\",\n    \"size\": \"1024x1024\",\n    \"aspect_ratio\": \"1:1\",\n    \"style\": \"vector_illustration\"\n  }\n}"
+}
+```
+
+**字段说明:**
+- `tool_name`: 标识使用的具体工具，便于前端识别和处理
+- `status`: 明确标识执行结果状态
+- `filepath`: 统一使用 `filepath` 而非 `url`，保持与 Replicate API 返回值的一致性
+- `message`: 提供用户友好的状态描述
+- `metadata`: 包含生成参数的详细信息，便于调试和日志记录
+
+**使用场景:**
+- Recraft SVG 生成工具
+- 其他基于 Replicate 的图像生成模型
+- 需要标准化响应格式的图像处理工具
+
 ### 完整工具返回结构 (Complete Tool Return Structure)
 
 ```typescript

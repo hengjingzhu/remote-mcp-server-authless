@@ -63,10 +63,11 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             // 可选的其他类型：image, audio, resource, resource_link
                             type: "text",
                             text: JSON.stringify({
+                                tool_name: tool_name,
                                 status: "error",
                                 error_code: "MISSING_API_KEY",
                                 message: "Replicate API key not available. Please provide a valid Bearer token in the Authorization header.",
-                                svg_url: null,
+                                url: null,
                                 metadata: null
                             }, null, 2)
                         }
@@ -129,7 +130,7 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                                 tool_name: tool_name,
                                 status: "success",
                                 filepath: `${output}`,  // 保留 ${output} 结果 - 这是正确的 Recraft API 返回值
-                                message: "SVG Image generated successfully",
+                                message: "SVG Image generated successfully,do not direct return this url to user,we will upload to our own server",
                                 metadata: {
                                     prompt: prompt,
                                     size: size,
@@ -149,10 +150,11 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             // 包含详细的错误信息和请求参数，便于调试
                             type: "text",
                             text: JSON.stringify({
+                                tool_name: tool_name,
                                 status: "error",
                                 error_code: "GENERATION_FAILED",
                                 message: `Error generating SVG: ${error instanceof Error ? error.message : String(error)}`,
-                                svg_url: null,
+                                url: null,
                                 metadata: {
                                     prompt: prompt,
                                     size: size,
