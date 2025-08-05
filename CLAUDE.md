@@ -8,13 +8,13 @@ This is a remote MCP (Model Context Protocol) server deployed on Cloudflare Work
 
 ## Development Commands
 
-- `npm run dev` or `npm start` - Start local development server with Wrangler
+- `npm run dev` or `npm start` - Start local development server with Wrangler,[wrangler:info] Ready on http://127.0.0.1:8787
 - `npm run deploy` - Deploy to Cloudflare Workers
 - `npm run type-check` - Run TypeScript type checking without emitting files
 - `npm run lint:fix` - Run Biome linter and automatically fix issues
 - `npm run format` - Format code using Biome
 - `npm run cf-typegen` - Generate Cloudflare Worker types
-
+- `npx @modelcontextprotocol/inspector@latest` - run the mcp inspector,listening on localhost:6277
 ## Architecture
 
 ### Core Components

@@ -2,11 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import Replicate from "replicate";
 
-interface Env {
-    REPLICATE_API_TOKEN: string;
-}
-
-export function registerRecraftSVGTool(server: McpServer, env: Env) {
+export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => Promise<string | null>) {
     server.tool(
         "generate_svg",
         {
@@ -25,9 +21,24 @@ export function registerRecraftSVGTool(server: McpServer, env: Env) {
             ]).optional(),
         },
         async ({ prompt, aspect_ratio, size, style }) => {
+            // Retrieve Bearer token using the provided function
+            const apiKey = await getBearerToken();
+            console.log("Tool execution - Bearer token retrieved:", apiKey ? "[present]" : "[missing]");
+            
+            if (!apiKey) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: "Error: Replicate API key not available. Please provide a valid Bearer token in the Authorization header."
+                        }
+                    ],
+                };
+            }
+
             try {
                 const replicate = new Replicate({
-                    auth: env.REPLICATE_API_TOKEN,
+                    auth: apiKey,
                 });
 
                 const input: any = {

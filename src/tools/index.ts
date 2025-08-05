@@ -1,13 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { registerRecraftSVGTool } from "./recraft-svg.js";
+import { registerRecraftSVGTool } from "./recraft-svg";
 
 interface Env {
-    REPLICATE_API_TOKEN?: string;
+    E2B_API_KEY: string;
+    OAUTH_CLIENT_ID?: string;
+    OAUTH_CLIENT_SECRET?: string;
+    MCP_OBJECT: DurableObjectNamespace;
 }
 
-export function registerAllTools(server: McpServer, env: Env) {
-    // Only register Recraft SVG tool if API token is available
-    if (env.REPLICATE_API_TOKEN) {
-        registerRecraftSVGTool(server, { REPLICATE_API_TOKEN: env.REPLICATE_API_TOKEN });
-    }
+export function registerAllTools(server: McpServer, getBearerToken: () => Promise<string | null>) {
+    // Register Recraft SVG tool with Bearer token retrieval function
+    registerRecraftSVGTool(server, getBearerToken);
 }
