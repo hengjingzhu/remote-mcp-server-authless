@@ -72,18 +72,18 @@ export class MyMCP extends McpAgent<Env> {
   }
   
 	async init() {
-		// Simple addition tool
-		this.server.tool(
-			"add",
-			"Performs basic mathematical addition of two numbers. Use this tool when you need to calculate the sum of two numeric values. Returns the result as a string representation of the sum.",
-			{ 
-				a: z.number().describe("The first number to add"), 
-				b: z.number().describe("The second number to add") 
-			},
-			async ({ a, b }) => ({
-				content: [{ type: "text", text: String(a + b) }],
-			})
-		);
+		// // Simple addition tool
+		// this.server.tool(
+		// 	"add",
+		// 	"Performs basic mathematical addition of two numbers. Use this tool when you need to calculate the sum of two numeric values. Returns the result as a string representation of the sum.",
+		// 	{ 
+		// 		a: z.number().describe("The first number to add"), 
+		// 		b: z.number().describe("The second number to add") 
+		// 	},
+		// 	async ({ a, b }) => ({
+		// 		content: [{ type: "text", text: String(a + b) }],
+		// 	})
+		// );
 
 		// Calculator tool with multiple operations
 		this.server.tool(

@@ -66,7 +66,7 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                             type: "text",
                             text: JSON.stringify({
                                 status: "success",
-                                svg_url: `${output}`,
+                                url: `${output}`,
                                 message: "SVG generated successfully",
                                 metadata: {
                                     prompt: prompt,
