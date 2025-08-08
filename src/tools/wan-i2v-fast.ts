@@ -38,9 +38,9 @@ export function registerWanI2VFastTool(server: McpServer, getBearerToken: () => 
         {
             image: z.string().url("Image must be a valid URL").describe("Input image URL to generate video from. Must be a publicly accessible image URL (HTTPS). The image will serve as the starting frame for the generated video"),
             prompt: z.string().min(1, "Prompt is required").describe("Detailed English text description for video generation. Describe the motion, action, or transformation you want to see in the video. Be specific about camera movements, character actions, environmental changes, etc."),
-            num_frames: z.number().int().min(1).max(200).optional().default(81).describe("Number of video frames to generate. 81 frames give the best results. Higher values create longer videos but take more time and resources. Range: 1-200"),
+            num_frames: z.number().int().min(81).max(120).optional().default(81).describe("Number of video frames to generate. 81 frames give the best results. Higher values create longer videos but take more time and resources. Range: 1-200"),
             resolution: z.enum(["480p", "720p"]).optional().default("480p").describe("Video resolution quality. '480p' for faster generation and smaller files, '720p' for higher quality but longer processing time. Note: 480p corresponds to 832x480px for 16:9 or 480x832px for 9:16"),
-            frames_per_second: z.number().int().min(1).max(60).optional().default(24).describe("Frames per second (FPS) for the output video. 24 FPS is cinematic standard. Higher values create smoother motion but larger file sizes. Range: 1-60"),
+            frames_per_second: z.number().int().min(1).max(30).optional().default(24).describe("Frames per second (FPS) for the output video. 24 FPS is cinematic standard. Higher values create smoother motion but larger file sizes. Range: 1-60"),
             go_fast: z.boolean().optional().default(true).describe("Enable speed optimization for faster generation. Recommended to keep enabled for better performance. When disabled, generation may be more thorough but significantly slower"),
             sample_shift: z.number().optional().describe("Sample shift factor for fine-tuning generation behavior. Advanced parameter that affects the sampling process. Leave unset for default behavior unless you need specific control over the generation process"),
             seed: z.number().int().optional().describe("Random seed for reproducible results. Use the same seed with identical parameters to generate the same video. Leave empty for random generation. Useful for consistent results in testing or when you want to recreate a specific output")
@@ -136,7 +136,7 @@ export function registerWanI2VFastTool(server: McpServer, getBearerToken: () => 
                                 message: "Video generated successfully from image. Do not direct return this url to user, we will upload to our own server",
                                 metadata: {
                                     prompt: prompt,
-                                    image: image,
+                                    // image: image,
                                     num_frames: num_frames,
                                     resolution: resolution,
                                     frames_per_second: frames_per_second,
