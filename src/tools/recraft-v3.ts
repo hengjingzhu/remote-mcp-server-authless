@@ -34,7 +34,7 @@ const tool_name = "generate_image"
 export function registerRecraftV3Tool(server: McpServer, getBearerToken: () => Promise<string | null>) {
     server.tool(
         tool_name,
-        "Generates high-quality images using Recraft V3 model. This is SOTA in image generation with ability to generate long texts and images in a wide variety of styles including realistic photos, digital illustrations, and artistic designs. Supports various aspect ratios, sizes, and comprehensive style options for different use cases.",
+        "Generates high-quality images. This is SOTA in image generation with ability to generate long texts and images in a wide variety of styles including realistic photos, digital illustrations, and artistic designs. Supports various aspect ratios, sizes, and comprehensive style options for different use cases.",
         {
             prompt: z.string().min(1, "Prompt is required").describe("Detailed English text description of the image to generate. Be specific about style, colors, composition, and visual elements you want to include. Supports long text generation within images"),
             aspect_ratio: z.enum([
