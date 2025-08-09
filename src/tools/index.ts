@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerRecraftSVGTool } from "./recraft-svg";
 import { registerRecraftV3Tool } from "./recraft-v3";
 import { registerWanI2VFastTool } from "./wan-i2v-fast";
+import { registerSeedanceProTool } from "./seedance-pro";
 
 interface Env {
     E2B_API_KEY: string;
@@ -19,4 +20,7 @@ export function registerAllTools(server: McpServer, getBearerToken: () => Promis
     
     // Register WAN 2.2 i2v-fast video generation tool with Bearer token retrieval function
     registerWanI2VFastTool(server, getBearerToken);
+    
+    // Register ByteDance SeedanceV1-Pro video generation tool with Bearer token retrieval function
+    registerSeedanceProTool(server, getBearerToken);
 }
