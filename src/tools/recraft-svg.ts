@@ -130,7 +130,7 @@ export function registerRecraftSVGTool(server: McpServer, getBearerToken: () => 
                                 tool_name: tool_name,
                                 status: "success",
                                 filepath: `${output}`,  // 保留 ${output} 结果 - 这是正确的 Recraft API 返回值
-                                message: "SVG Image generated successfully,do not direct return this url to user,we will upload to our own server",
+                                message: "SVG Image generated successfully,do not direct return this filepath url to user,we will upload to our own server",
                                 metadata: {
                                     prompt: prompt,
                                     size: size,
