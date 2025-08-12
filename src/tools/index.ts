@@ -3,6 +3,7 @@ import { registerRecraftSVGTool } from "./recraft-svg";
 import { registerRecraftV3Tool } from "./recraft-v3";
 import { registerWanI2VFastTool } from "./wan-i2v-fast";
 import { registerSeedanceProTool } from "./seedance-pro";
+import { registerRunwaymlGen4ImageTool } from "./runwayml-gen4-image";
 
 interface Env {
     E2B_API_KEY: string;
@@ -23,4 +24,7 @@ export function registerAllTools(server: McpServer, getBearerToken: () => Promis
     
     // Register ByteDance SeedanceV1-Pro video generation tool with Bearer token retrieval function
     registerSeedanceProTool(server, getBearerToken);
+    
+    // Register RunwayML Gen4-Image generation tool with Bearer token retrieval function
+    registerRunwaymlGen4ImageTool(server, getBearerToken);
 }
