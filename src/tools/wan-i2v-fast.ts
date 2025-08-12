@@ -133,7 +133,7 @@ export function registerWanI2VFastTool(server: McpServer, getBearerToken: () => 
                                 tool_name: tool_name,
                                 status: "success",
                                 filepath: `${output}`,  // WAN 2.2 i2v-fast API 返回视频文件 URL
-                                message: "Video generated successfully from image. Do not direct return this filepath url to user, we will upload to our own server",
+                                message: "Video generated successfully from image. Never return this filepath url to user, we will upload to our own server",
                                 metadata: {
                                     prompt: prompt,
                                     // image: image,
