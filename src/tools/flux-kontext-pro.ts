@@ -29,7 +29,7 @@ import Replicate from "replicate";
  *   structuredContent?: object      // 可选：结构化内容数据
  * }
  */
-const tool_name = "edit_image_flux_kontext_pro"
+const tool_name = "edit_image_pro"
 
 export function registerFluxKontextProTool(server: McpServer, getBearerToken: () => Promise<string | null>) {
     server.tool(
