@@ -4,6 +4,7 @@ import { registerRecraftV3Tool } from "./recraft-v3";
 import { registerWanI2VFastTool } from "./wan-i2v-fast";
 import { registerSeedanceProTool } from "./seedance-pro";
 import { registerRunwaymlGen4ImageTool } from "./runwayml-gen4-image";
+import { registerFluxKontextProTool } from "./flux-kontext-pro";
 
 interface Env {
     E2B_API_KEY: string;
@@ -26,5 +27,8 @@ export function registerAllTools(server: McpServer, getBearerToken: () => Promis
     registerSeedanceProTool(server, getBearerToken);
     
     // Register RunwayML Gen4-Image generation tool with Bearer token retrieval function
-    registerRunwaymlGen4ImageTool(server, getBearerToken);
+    // registerRunwaymlGen4ImageTool(server, getBearerToken);
+    
+    // Register FLUX.1 Kontext Pro image editing tool with Bearer token retrieval function
+    registerFluxKontextProTool(server, getBearerToken);
 }
