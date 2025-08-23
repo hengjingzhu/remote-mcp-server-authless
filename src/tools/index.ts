@@ -5,6 +5,7 @@ import { registerWanI2VFastTool } from "./wan-i2v-fast";
 import { registerSeedanceProTool } from "./seedance-pro";
 import { registerRunwaymlGen4ImageTool } from "./runwayml-gen4-image";
 import { registerFluxKontextProTool } from "./flux-kontext-pro";
+import { registerFluxKontextDevLoraTool } from "./flux-kontext-dev-lora";
 
 interface Env {
     E2B_API_KEY: string;
@@ -31,4 +32,7 @@ export function registerAllTools(server: McpServer, getBearerToken: () => Promis
     
     // Register FLUX.1 Kontext Pro image editing tool with Bearer token retrieval function
     registerFluxKontextProTool(server, getBearerToken);
+    
+    // Register FLUX.1 Kontext Dev LoRA image editing tool with Bearer token retrieval function
+    registerFluxKontextDevLoraTool(server, getBearerToken);
 }
