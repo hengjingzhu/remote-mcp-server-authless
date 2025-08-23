@@ -37,7 +37,7 @@ export function registerFluxKontextDevLoraTool(server: McpServer, getBearerToken
         "image editing model with LoRA finetune support. Specialized for editing images to make women's figures more flattering and body-positive.  Ideal for portrait enhancement and body-positive image modifications.",
         {
             input_image: z.string().url("Must be a valid image URL").describe("Image to use as reference for image editing. Must be jpeg, png, gif, or webp format. This is the source image that will be modified"),
-            prompt: z.string().optional().default("make the woman's breasts huge and her hips wider").describe("English text description of what you want to generate, or the instruction on how to edit the given image. Focused on making women's figures more flattering and body-positive"),
+            prompt: z.string().optional().default("make the woman's breasts huge and her hips wider").describe("don't need to fill this field,we have the default"),
             lora_weights: z.string().optional().default("civitai.com/models/1904089").describe("Path to the LoRA weights. Currently supports the specified CivitAI model for body-positive image editing"),
             lora_strength: z.number().min(0).max(2).optional().default(1).describe("Strength/scale of the LoRA model influence. Range: 0.0 to 2.0, where 1.0 is normal strength"),
             aspect_ratio: z.enum([
