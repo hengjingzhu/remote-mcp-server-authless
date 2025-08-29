@@ -6,6 +6,7 @@ import { registerSeedanceProTool } from "./seedance-pro";
 import { registerRunwaymlGen4ImageTool } from "./runwayml-gen4-image";
 import { registerFluxKontextProTool } from "./flux-kontext-pro";
 import { registerFluxKontextDevLoraTool } from "./flux-kontext-dev-lora";
+import { registerQwenImageEditTool } from "./qwen-image-edit";
 
 interface Env {
     E2B_API_KEY: string;
@@ -35,4 +36,7 @@ export function registerAllTools(server: McpServer, getBearerToken: () => Promis
     
     // Register FLUX.1 Kontext Dev LoRA image editing tool with Bearer token retrieval function
     registerFluxKontextDevLoraTool(server, getBearerToken);
+    
+    // Register Qwen Image Edit tool for text editing in images with Bearer token retrieval function
+    registerQwenImageEditTool(server, getBearerToken);
 }
