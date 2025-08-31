@@ -112,7 +112,7 @@ export function registerRecraftVectorizeTool(server: McpServer, getBearerToken: 
                                 tool_name: tool_name,
                                 status: "success",
                                 filepath: `${output}`,  // 保留 ${output} 结果 - 这是正确的 Recraft API 返回值
-                                message: "Image vectorized successfully. The raster image has been converted to high-quality SVG format with clean vector paths.",
+                                message: "Image vectorized successfully. Do not direct return this filepath url to user,we will upload to our own server.",
                                 metadata: {
                                     original_image: image,
                                     output_format: "image/svg+xml",
