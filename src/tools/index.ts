@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerRecraftSVGTool } from "./recraft-svg";
 import { registerRecraftV3Tool } from "./recraft-v3";
+import { registerRecraftVectorizeTool } from "./recraft-vectorize";
 import { registerWanI2VFastTool } from "./wan-i2v-fast";
 import { registerSeedanceProTool } from "./seedance-pro";
 import { registerRunwaymlGen4ImageTool } from "./runwayml-gen4-image";
@@ -21,6 +22,9 @@ export function registerAllTools(server: McpServer, getBearerToken: () => Promis
     
     // Register Recraft V3 image generation tool with Bearer token retrieval function
     registerRecraftV3Tool(server, getBearerToken);
+    
+    // Register Recraft Vectorize tool with Bearer token retrieval function
+    registerRecraftVectorizeTool(server, getBearerToken);
     
     // Register WAN 2.2 i2v-fast video generation tool with Bearer token retrieval function
     registerWanI2VFastTool(server, getBearerToken);
